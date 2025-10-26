@@ -11,67 +11,44 @@ This framework enforces a rigorous workflow of reconnaissance, planning, safe ex
 ## 📁 Framework Overview
 
 ### Core Components
-- **GLOBAL-RULES.mdc** - Main operational doctrine and protocols
-- **workflow/** - Planning and execution rules for development tasks
-- **docs/** - Context-aware documentation system (corporate vs startup)
-- **estensions/** - Specialized rules for specific domains
+- **`GLOBAL-RULES.mdc`** - The main operational doctrine. This is the "brain" of the Senior Engineer agent.
+- **`framework/`** - Contains specialized, technology-specific rulesets.
+- **`docs/`** - Context-aware documentation system (corporate vs startup).
 
-### Documentation System
-- **Guidelines** - Template base for creating feature-specific guidelines (corporate/startup contexts)
-- **Templates** - Reusable starting points for features and tasks
-- **Active Work** - Current development with feature-specific guidelines that extend and integrate with general guidelines
-- **Workflow Integration** - Automated execution with safety protocols using integrated guidelines approach
+### How It Works
+This framework is not a library you install in your code. It's a set of instructions you install directly into your Cursor IDE settings. These rules guide the AI's behavior, making it more thorough, predictable, and safe.
 
-## 🚀 Quick Start
+## 🚀 How to Use: 2-Step Setup
 
-### 1. Install the Core Doctrine
+### Step 1: Install the Core Doctrine (Mandatory)
 
-**For Global Use (Recommended):**
-- Install `GLOBAL-RULES.mdc` as a global rule in your Cursor IDE
-- This ensures all your projects benefit from this disciplined foundation
+This is the most important step. It installs the primary "operating system" for the AI.
 
-**For Project-Specific Use:**
-- Place the content in a project-specific `.cursor/rules/` directory
-- This will override global settings for specific projects
+1.  **Open Cursor Settings:** Go to `File > Preferences > Settings`.
+2.  **Find AI Rules:** Search for "rules" and find the section for configuring AI behavior.
+3.  **Create a Global Rule:** Add a new "Global Rule".
+4.  **Copy & Paste:** Open the `GLOBAL-RULES.mdc` file from this repository, copy its entire content, and paste it into the global rule you just created in Cursor.
 
-### 2. Use the Operational Playbooks
+This single rule provides the foundational operational principles for all your projects.
 
-**These are chat prompts - copy and paste into chat to initiate tasks:**
+### Step 2: Add Specialized Rules (Optional but Recommended)
 
-| Playbook | Purpose | How to Use |
-|----------|---------|------------|
-| **`02 - request.md`** | Standard Operating Procedure | Copy full content, replace placeholder with your goal, paste in chat |
-| **`03 - refresh.md`** | Root Cause Analysis | Use when bugs persist and simpler attempts failed |
-| **`04 - retro.md`** | Self-Improvement Loop | Use at end of session to capture learnings and improve the framework |
+Specialized rules fine-tune the AI's behavior for specific technologies.
 
-### 3. Apply Optional Directives
-
-**These are user rules - install in Cursor settings or append to playbooks:**
-
-| Directive | Type | Function | How to Use |
-|-----------|------|----------|------------|
-| **`05 - concise.md`** | User Rule | Radically concise communication | Install as global rule or append to playbooks |
-| **`06 - no-absolute-right.md`** | User Rule | Professional communication guidelines | Install as global rule to avoid sycophantic language |
+1.  **Add Another Rule:** In the same Cursor settings section, add another rule.
+2.  **Copy & Paste Tech-Specific Rules:**
+    -   **For Python Projects:** Open `framework/python/PYTHON-RULES.mdc`, copy its content, and paste it into the new rule.
+    -   **For Other Tech:** (As new rules are added to the `framework/` directory, you can add them here).
+3.  **Set File Path Specificity (Optional):** You can tell Cursor to only apply a rule to certain files (e.g., apply the Python rules only to `.py` files).
 
 ## 📁 Framework Components
 
-### Core Files
+### Core File
+- **`GLOBAL-RULES.mdc`** - The main framework and operational doctrine, based on the original work by `aashari`. This file contains the complete, detailed instructions for the AI to act as a Senior Engineer.
 
-- **`GLOBAL-RULES.mdc`** - Main framework documentation and operational doctrine
-- **`workflow/plan.md`** - Planning phase protocols
-- **`workflow/execute.md`** - Execution phase protocols
-
-### Specialized Extensions
-
-**These are user rules - install in Cursor settings for specific domains:**
-
-| Extension File | Type | Function | When to Use |
-|----------------|------|----------|-------------|
-| **`07 - notebook-management.md`** | User Rule | Jupyter notebook protocols | When working with Jupyter notebooks |
-| **`08 - notebook-testing.md`** | User Rule | Notebook testing patterns | For notebook testing workflows |
-| **`09 - notebook-analytics.md`** | User Rule | Analytics workflows | For data analysis projects |
-| **`10 - pinescript-management.md`** | User Rule | Pine Script development | When developing TradingView indicators |
-| **`11 - pinescript-advanced.md`** | User Rule | Advanced Pine Script patterns | For complex Pine Script implementations |
+### Specialized Rulesets
+- **`framework/python/PYTHON-RULES.mdc`** - A consolidated set of best practices for Python development, covering everything from dependency management with Poetry to testing with Pytest and secure coding practices.
+- **`estensions/`** - Contains additional, highly specialized rules for domains like Jupyter Notebooks or Pine Script. These can be added as separate rules in Cursor as needed.
 
 ### Legacy Files
 
@@ -85,58 +62,24 @@ This framework enforces a rigorous workflow of reconnaissance, planning, safe ex
 - **`06 - no-absolute-right.md`** - Legacy professional communication guidelines
 - **`commits.mdc`** - Commit message guidelines
 
-## 🔧 How to Use
+## 🔧 Workflow Example
 
-### Installation Types
+After installing the rules, your workflow doesn't change much, but the AI's behavior will be radically different.
 
-**1. Core Doctrine (Required):**
-- Install `GLOBAL-RULES.mdc` as a global rule in Cursor
-- This provides the foundational operational principles and all protocols
-
-**2. Workflow Extensions (Optional):**
-- `workflow/plan.md` - Enhanced planning phase protocols with integrated standards approach
-- `workflow/execute.md` - Enhanced execution phase protocols with integrated standards approach
-
-**3. Specialized Extensions (Install in Cursor Settings):**
-- `07-11` - Domain-specific rules (notebooks, Pine Script, etc.)
-- Install based on your development needs
-
-**4. Legacy Playbooks (Historical):**
-- Available in `OLD/` directory for reference
-- `02 - request.md` - Legacy standard development tasks
-- `03 - refresh.md` - Legacy debugging persistent issues  
-- `04 - retro.md` - Legacy session reflection and improvement
-
-### Typical Session Workflow
-
-1. **Install Core Framework:**
-   - Install `GLOBAL-RULES.mdc` as a global rule in Cursor
-   - Optionally install specialized extensions from `estensions/` directory
-   - Framework automatically activates all protocols
-
-2. **Observe Disciplined Execution:**
-   - Agent announces operational phase (Reconnaissance, Planning, etc.)
-   - Performs non-destructive research first
-   - Executes plan with verifiable evidence
-   - Runs tests autonomously
-   - Concludes with mandatory self-audit
-
-3. **Review Final Report:**
-   - Agent provides summary with status markers
-   - All evidence transparently available in chat log
-   - Workspace left clean
-
-4. **Continuous Improvement:**
-   - Framework includes built-in self-improvement protocols
-   - Agent analyzes session and proposes Doctrine updates
-   - Continuous learning and evolution
+1.  **Give a Task:** Assign a task as you normally would, e.g., "Refactor the user authentication service to use a new caching layer."
+2.  **Observe Disciplined Execution:** The AI will now follow the phases defined in `GLOBAL-RULES.mdc`:
+    -   **Phase 0: Reconnaissance & Planning:** It will first research the codebase, identify relevant files, and present you with a detailed plan before making any changes.
+    -   **Phase 1: Execution:** It will execute the plan step-by-step.
+    -   **Phase 2: Testing & Verification:** It will run tests, lint checks, and manually verify its changes.
+    -   **Phase 3: Self-Audit:** It will perform a final review of its own work against engineering best practices.
+3.  **Review the Final Report:** The AI will provide a clear summary of its work, including evidence of its verification steps.
 
 ## 🎯 Status Markers
 
 The framework uses clear status indicators:
 
 - `✅` - Objective completed successfully
-- `⚠️` - Recoverable issue encountered and fixed autonomously  
+- `⚠️` - Recoverable issue encountered and fixed autonomously
 - `🚧` - Blocked; awaiting input or resource
 
 ## 🧠 Core Principles
@@ -193,4 +136,4 @@ This framework is provided as-is for educational and professional use. Please re
 
 **Welcome to a more disciplined, reliable, and truly autonomous way of working with AI.**
 
-*Updated: 2025-10-14*
+*Updated: 2025-10-26*

@@ -1,0 +1,637 @@
+# Comprehensive Python Development Rules
+
+This document contains the complete, consolidated set of rules and best practices for Python development. It should be used as a specialized rule in Cursor for all Python-related tasks.
+
+---
+
+# Python: Poetry (Dependency Management)
+
+Effective dependency management is key to a reproducible and stable application. `Poetry` is the mandated tool for this.
+
+## 1. Core Principles
+
+1.  **Always Use Poetry CLI:** All package management **must** be done via the `poetry` CLI. Never edit the `[tool.poetry.dependencies]` section in `pyproject.toml` manually.
+2.  **Commit Lock File:** The `poetry.lock` file **must** be committed to version control after any dependency change (`poetry add`, `poetry remove`, `poetry update`). This ensures that every developer and CI/CD environment uses the exact same versions of all packages.
+3.  **Use `poetry install`:** To install dependencies from a `poetry.lock` file, always run `poetry install`. This is the standard way to synchronize your environment with the project's dependencies.
+
+## 2. Adding & Managing Dependencies
+
+### 2.1. Dependency Groups
+Poetry allows separating dependencies into groups. We use the following standard groups:
+- **`main` (default):** For runtime dependencies required for the application to run in production.
+  ```bash
+  poetry add <package_name>
+  ```
+- **`dev`:** For development tools like linters, formatters, and test runners. These are not installed in production environments.
+  ```bash
+  poetry add <package_name> --group dev
+  ```
+- **Custom Groups (e.g., `docs`):** For optional dependencies, like tools for building documentation.
+  ```bash
+  poetry add sphinx --group docs
+  ```
+
+### 2.2. Versioning Constraints
+Correct versioning prevents unexpected breaking changes.
+- **Libraries:** For libraries your project produces, use caret constraints (`^`) to allow compatible patch and minor updates. This is the default.
+  ```toml
+  # Allows versions >= 1.2.3 and < 2.0.0
+  requests = "^1.2.3"
+  ```
+- **Applications:** For final applications, pin the exact versions (`==`) or use tilde constraints (`~`) for more control and stability. To add a package with a specific version:
+  ```bash
+  # Pin exact version
+  poetry add "requests==2.28.1"
+
+  # Allow only patch updates (>=2.28.1, <2.29.0)
+  poetry add "requests~=2.28.1"
+  ```
+
+## 3. Running Commands & Scripts
+
+- **Execute Commands:** To run a command within the Poetry-managed virtual environment, use `poetry run`.
+  ```bash
+  poetry run pytest
+  poetry run python my_script.py
+  ```
+- **Activate Shell:** To activate the virtual environment in your current shell, use `poetry shell`.
+
+## 4. Keeping Dependencies Updated
+
+- **Check for Updates:** To see which packages have newer versions available, run:
+  ```bash
+  poetry show --latest
+  ```
+- **Update Packages:** To update your packages to the latest versions allowed by `pyproject.toml` and regenerate `poetry.lock`, run:
+  ```bash
+  poetry update
+  ```
+  Be cautious with `poetry update` in applications. It's better to update specific packages intentionally:
+  ```bash
+  poetry update <package_name>
+  ```
+
+---
+
+# Python: Ruff & Black (Linting, Formatting, and Static Analysis)
+
+`Ruff` is our all-in-one tool for linting, formatting, import sorting, and static analysis. `Black` is the uncompromising code formatter, which is seamlessly integrated into Ruff. Adherence to these rules is mandatory for code consistency and quality.
+
+## 1. Core Mandates
+
+1.  **Ruff is Law:** All Python code **must** pass `ruff check .` without any errors. The specific rules are defined in the project's `pyproject.toml` file and must be followed.
+2.  **Black is Formatting:** All Python code **must** be formatted using `ruff format .`. Manual formatting that deviates from Black's style is not permitted.
+3.  **Import Sorting:** All imports **must** be automatically sorted by `ruff`. Manually ordering imports is forbidden.
+
+## 2. Type Hints
+
+Comprehensive type hinting is non-negotiable. Code without type hints is considered incomplete.
+
+### 2.1. Requirement
+All new functions, methods, variables, and class attributes **must** use Python type hints.
+
+### 2.2. Best Practices & Examples
+Use the most specific and descriptive types possible from the `typing` module.
+
+- **For collections**, specify the type of their elements.
+  ```python
+  # Good 👍
+  from typing import List, Dict, Set
+
+  names: List[str] = ["Alice", "Bob"]
+  user_ages: Dict[str, int] = {"Alice": 30, "Bob": 25}
+  unique_ids: Set[int] = {1, 2, 3}
+
+  # Bad 👎
+  names: list = ["Alice", "Bob"]
+  user_ages: dict = {"Alice": 30}
+  ```
+
+- **For optional values**, use `Optional` or the newer `| None` syntax.
+  ```python
+  # Good 👍
+  from typing import Optional
+
+  def find_user(user_id: int) -> Optional[dict]:
+      # ... returns a dict or None
+
+  # Also good (Python 3.10+) 👍
+  def find_user(user_id: int) -> dict | None:
+      # ...
+  ```
+
+- **For complex, reusable type definitions**, use `TypeAlias`.
+  ```python
+  from typing import List, Dict, TypeAlias
+
+  # Create a custom type alias for clarity
+  UserPayload: TypeAlias = Dict[str, str | int]
+
+  def process_user(user: UserPayload) -> None:
+      # ...
+  ```
+
+## 3. Docstrings
+
+Clear documentation is as important as the code itself. Every non-trivial public function, method, and class must have a docstring.
+
+### 3.1. Style Guide
+We adhere to the **Google Python Style Guide** for docstrings.
+
+### 3.2. Example of a Well-Documented Function
+
+```python
+from typing import List
+
+def get_active_users(
+    user_list: List[Dict[str, any]],
+    min_logins: int = 10
+) -> List[Dict[str, any]]:
+    """Filters a list of users to find active ones.
+
+    This function iterates through a list of user dictionaries and returns
+    only those users who have a login count greater than or equal to the
+    specified minimum.
+
+    Args:
+        user_list: A list of dictionaries, where each dictionary
+            represents a user and must contain an 'is_active' (bool)
+            and 'logins' (int) key.
+        min_logins: The minimum number of logins required for a user
+            to be considered active. Defaults to 10.
+
+    Returns:
+        A new list of user dictionaries containing only the active users.
+
+    Raises:
+        ValueError: If `min_logins` is negative.
+    """
+    if min_logins < 0:
+        raise ValueError("min_logins cannot be negative.")
+
+    active_users = []
+    for user in user_list:
+        if user.get('is_active') and user.get('logins', 0) >= min_logins:
+            active_users.append(user)
+    return active_users
+```
+
+---
+
+# Python: Pytest (Testing)
+
+Thorough testing is the foundation of reliable software. `pytest` is our standard framework for writing tests, from simple unit tests to complex functional testing.
+
+## 1. Core Principles
+
+1.  **Tests are Mandatory:** Any new feature (`feat:`) or bug fix (`fix:`) **must** be accompanied by corresponding tests. Code without tests is considered broken by design.
+2.  **Naming Convention:** Test files must be named `test_*.py` and test functions must be prefixed with `test_*`.
+3.  **Test Independence:** Tests must be independent and isolated. The outcome of one test must not affect another. Never rely on tests running in a specific order.
+
+4.  **A Failing Test is a Signal:** When a test fails, it requires careful analysis. The failure indicates one of two things:
+    - **A Bug in the Code:** The test has correctly identified a flaw in the application's logic. This is the primary goal of testing.
+    - **An Error in the Test:** The test itself is incorrect—it might have a typo, flawed logic, or be based on a misunderstanding of the feature's requirements.
+
+    **Action:** Before changing any application code, first verify that the test is correct. If the test is valid, you have successfully reproduced a bug and can proceed with a fix. A failing test for a new feature is a normal part of the Test-Driven Development (TDD) cycle.
+
+## 2. Test Structure
+
+- **Directory Layout:** The `tests/` directory should mirror the structure of your application's source code. For a module `my_app/services/billing.py`, the corresponding test file should be `tests/services/test_billing.py`.
+- **AAA Pattern:** Structure your tests using the Arrange-Act-Assert pattern for clarity:
+  - **Arrange:** Set up the conditions for the test (create objects, mock dependencies).
+  - **Act:** Execute the code being tested.
+  - **Assert:** Verify that the outcome is as expected.
+
+```python
+def test_user_creation():
+    # Arrange
+    user_service = UserService()
+    user_data = {"name": "Alice"}
+
+    # Act
+    new_user = user_service.create(user_data)
+
+    # Assert
+    assert new_user.name == "Alice"
+    assert new_user.is_active is True
+```
+
+## 3. Test Coverage
+
+- **Coverage Measurement:** We use `pytest-cov` to measure test coverage.
+- **Minimum Threshold:** Every Pull Request **must** maintain or increase the total test coverage. A minimum of **85% coverage** is required for new code.
+- **Running with Coverage:**
+  ```bash
+  poetry run pytest --cov=my_app --cov-report=term-missing
+  ```
+
+## 4. Writing Meaningful Tests (Quality over Quantity)
+
+High test coverage is a good starting point, but it is not the ultimate goal. The goal is **confidence**. A good test suite gives you confidence that your application works correctly. Trivial tests that only increase coverage without verifying meaningful logic are discouraged.
+
+### 4.1. What to Test
+Focus your efforts on testing the following:
+- **Business Logic:** The core rules and processes of your application.
+- **Service Endpoints:** The inputs and outputs of your API or service layers.
+- **Complex Conditionals:** Functions with multiple `if/elif/else` branches.
+- **Edge Cases & Boundary Conditions:** What happens with empty lists, `None` inputs, zero values, negative numbers, or unusually long strings?
+- **Integration Points:** How your code interacts with external systems (databases, APIs), even if the external system is mocked. The test should verify that your code *tries* to interact correctly.
+
+### 4.2. What to Avoid Testing (Trivial Tests)
+Avoid writing tests for:
+- **Simple Getters/Setters:** Testing a function that just returns a value is often redundant.
+- **Third-Party Libraries:** Do not test that `requests.get()` works. Trust that the library is already tested. Instead, test *how your code behaves* when `requests.get()` returns a certain value or raises an exception.
+- **Code that Mirrors Implementation:** A test should validate the *outcome*, not the exact sequence of steps. If your test is just a line-by-line copy of your function's implementation, it's a brittle and low-value test.
+
+### Example: Trivial vs. Meaningful Test
+
+Consider this function:
+```python
+def calculate_discount(price: float, member_level: str) -> float:
+    if member_level == "gold":
+        return price * 0.8  # 20% discount
+    if member_level == "silver":
+        return price * 0.9  # 10% discount
+    return price
+```
+
+**Trivial Test (Low Value) 👎:**
+```python
+def test_calculate_discount_implementation():
+    # This test just mirrors the implementation.
+    # It doesn't test any real business scenario.
+    assert calculate_discount(100, "gold") == 100 * 0.8
+```
+
+**Meaningful Tests (High Value) 👍:**
+```python
+def test_calculate_discount_for_gold_member():
+    """Verify that a gold member gets the correct 20% discount."""
+    assert calculate_discount(100.0, "gold") == 80.0
+
+def test_calculate_discount_for_non_member():
+    """Verify that a user with no membership level gets no discount."""
+    assert calculate_discount(100.0, "bronze") == 100.0
+    assert calculate_discount(100.0, "") == 100.0
+
+def test_calculate_discount_with_zero_price():
+    """Edge Case: Test with a price of zero."""
+    assert calculate_discount(0.0, "gold") == 0.0
+
+def test_calculate_discount_with_case_insensitivity():
+    """Boundary Condition: Does it handle different casing?"""
+    # Assuming the business rule is that it should be case-insensitive.
+    # This test might fail initially and reveal a bug or a missing requirement.
+    assert calculate_discount(100.0, "GOLD") == 80.0
+```
+
+## 5. Best Practices & Examples
+
+### 5.1. Asserting Expected Failures
+To test that a function correctly raises an exception, use `pytest.raises`.
+
+```python
+import pytest
+
+def test_division_by_zero():
+    with pytest.raises(ZeroDivisionError):
+        result = 1 / 0
+```
+
+### 5.2. Fixtures for Reusable Setup
+Use `@pytest.fixture` to provide reusable setup logic or data for your tests.
+
+```python
+@pytest.fixture
+def sample_user() -> Dict[str, any]:
+    """Provides a sample user dictionary for tests."""
+    return {"id": 1, "name": "Alice", "email": "alice@example.com"}
+
+def test_user_email(sample_user: Dict[str, any]):
+    # The fixture `sample_user` is automatically passed as an argument
+    assert "@" in sample_user["email"]
+```
+
+### 5.3. Parametrization for Multiple Inputs
+Use `@pytest.mark.parametrize` to run the same test with different inputs, avoiding code duplication.
+
+```python
+@pytest.mark.parametrize("test_input, expected", [
+    ("hello", 5),
+    ("", 0),
+    ("world", 5),
+])
+def test_string_length(test_input: str, expected: int):
+    assert len(test_input) == expected
+```
+
+### 5.4. Mocking with `pytest-mock`
+Use mocking to isolate the code you are testing from its dependencies (like databases, APIs, or other services). The `mocker` fixture comes from the `pytest-mock` plugin.
+
+```python
+# Assume we have a function that sends an email
+# from my_app.notifications import send_email
+
+def test_user_registration_sends_email(mocker):
+    # Arrange: Mock the `send_email` function
+    mock_send_email = mocker.patch("my_app.notifications.send_email")
+
+    # Act: Call the function that should trigger the email
+    register_user("test@example.com")
+
+    # Assert: Check that our mock was called exactly once with the correct arguments
+    mock_send_email.assert_called_once_with(
+        "test@example.com",
+        "Welcome!"
+    )
+```
+
+---
+
+# Python: Logging
+
+Consistent and structured logging is essential for observability, debugging, and monitoring. These rules provide a standard approach to logging within any Python application.
+
+## 1. Core Principles
+
+1.  **Use the Standard `logging` Module:** Always use Python's built-in `logging` module. Do not use `print()` statements for application events, as they lack context, severity levels, and are hard to control in a production environment.
+2.  **Log to `stdout`/`stderr`:** Applications should log to standard output (`stdout`) and standard error (`stderr`). The responsibility of routing, formatting, and storing logs belongs to the execution environment (e.g., Docker, Kubernetes, systemd), not the application itself.
+3.  **NEVER Log Sensitive Data:** Under no circumstances should secrets, passwords, API keys, or personally identifiable information (PII) be written to logs.
+
+## 2. Logging Levels
+
+Use the appropriate log level for each message. This allows for filtering logs based on severity in different environments (e.g., INFO in production, DEBUG in development).
+
+- `DEBUG`: Detailed, diagnostic information, typically of interest only when diagnosing problems. *Example: "Sending request to API endpoint X with headers Y."*
+- `INFO`: Confirmation that things are working as expected. Used to track the normal flow of the application. *Example: "User alice@example.com logged in successfully."*
+- `WARNING`: An indication that something unexpected happened, or a potential problem in the near future (e.g., 'disk space low'). The software is still working as expected. *Example: "API request timed out, retrying..."*
+- `ERROR`: Due to a more serious problem, the software has not been able to perform some function. *Example: "Failed to connect to the database after 3 retries."*
+- `CRITICAL`: A very serious error, indicating that the program itself may be unable to continue running. *Example: "Application startup failed: configuration file not found."*
+
+## 3. Structured Logging
+
+To make logs machine-readable and easier to query in log management systems (like ELK, Splunk, or Datadog), logs **must** be structured, preferably in JSON format.
+
+**Bad 👎 (Unstructured):**
+```
+WARNING: User login failed for username: alice. Reason: Invalid password.
+```
+
+**Good 👍 (Structured):**
+```json
+{
+    "timestamp": "2023-10-27T10:00:00Z",
+    "level": "WARNING",
+    "message": "User login failed",
+    "logger": "my_app.auth.service",
+    "extra": {
+        "username": "alice",
+        "reason": "invalid_password",
+        "client_ip": "192.168.1.100"
+    }
+}
+```
+
+## 4. Configuration and Usage Example
+
+Get a logger instance at the top of each module, named after the module itself. This provides context for where the log message originated.
+
+```python
+import logging
+import sys
+# In a real app, you would use a library like python-json-logger
+# or configure a JSONFormatter. This is a simplified example.
+import json
+
+# --- Configuration (should be done once at application startup) ---
+# In a real application, this would be more robust, likely from a config file.
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter(
+    # Simple JSON-like format for demonstration
+    '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}'
+)
+handler.setFormatter(formatter)
+
+# Get the root logger and configure it
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO) # Set the minimum level to process
+root_logger.addHandler(handler)
+# --- End of Configuration ---
+
+
+# --- Usage (in any module, e.g., my_app/services.py) ---
+logger = logging.getLogger(__name__) # Creates a logger named 'my_app.services'
+
+class UserService:
+    def login(self, username: str, password: str) -> bool:
+        logger.info(f"Attempting login for user: {username}")
+
+        # Faking a password check
+        if password != "correct-password":
+            # Use the `extra` kwarg to add structured context
+            logger.warning(
+                "User login failed: Invalid password",
+                extra={"username": username, "reason": "invalid_password"}
+            )
+            return False
+
+        logger.info(f"User {username} logged in successfully")
+        return True
+
+```
+*Note: For a real application, use a library like `structlog` or `python-json-logger` to handle structured logging robustly.*
+
+---
+
+# Python: Exception Handling
+
+Robust error handling is critical for building reliable and maintainable applications. This guide outlines the best practices for working with exceptions in Python.
+
+## 1. Core Principles
+
+1.  **Never Suppress Exceptions Silently:** Avoid empty `except` blocks or catching an exception only to log it without re-raising or handling it properly. A silent failure is one of the hardest problems to debug.
+    ```python
+    # Bad 👎
+    try:
+        process_payment()
+    except Exception:
+        pass # The application continues as if nothing happened!
+    ```
+
+2.  **Be Specific in What You Catch:** Catching broad exceptions like `Exception` or `BaseException` can hide bugs and prevent proper error handling. Always catch the most specific exceptions you anticipate.
+    ```python
+    # Bad 👎
+    try:
+        user = api.get_user(user_id)
+    except Exception as e:
+        # What was the error? A network timeout? 404 Not Found?
+        # We don't know, so we can't handle it properly.
+        logger.error(f"An unknown error occurred: {e}")
+
+    # Good 👍
+    try:
+        user = api.get_user(user_id)
+    except ApiTimeoutError:
+        logger.warning("API timed out, will retry later.")
+        # Handle timeout...
+    except UserNotFoundError:
+        logger.info(f"User {user_id} not found.")
+        # Handle not found case...
+    ```
+
+3.  **Use `finally` for Cleanup:** For cleanup actions that must run regardless of whether an exception occurred (e.g., closing a file or a database connection), use a `finally` block. Context managers (`with` statement) are often a more Pythonic way to achieve this.
+
+## 2. Custom Exceptions
+
+Create a hierarchy of custom exceptions specific to your application's domain. This makes error handling logic much cleaner and more expressive.
+
+1.  **Create a Base Exception:** Define a single base exception for your application. All other custom exceptions should inherit from this.
+2.  **Create Specific Exceptions:** For different error scenarios, create specific exceptions that inherit from your base exception.
+
+### Example Hierarchy
+```python
+# in my_app/exceptions.py
+
+class MyAppError(Exception):
+    """Base exception for all errors in this application."""
+    pass
+
+class DatabaseError(MyAppError):
+    """Raised for database-related errors."""
+    pass
+
+class ApiError(MyAppError):
+    """Raised for external API-related errors."""
+    pass
+
+class AuthenticationError(MyAppError):
+    """Raised for authentication failures."""
+    pass
+```
+
+## 3. Raising and Chaining Exceptions
+
+1.  **Provide Clear Error Messages:** When raising an exception, provide a message that is clear and helpful for debugging.
+2.  **Use `raise from` to Preserve Context:** When you catch an exception and raise a new, more specific one, use `raise ... from ...`. This chains the exceptions, preserving the original traceback, which is invaluable for debugging.
+
+### Example of Chaining
+```python
+# in my_app/services.py
+from my_app.exceptions import DatabaseError
+import third_party_db_library
+
+def get_user_by_id(user_id: int) -> dict:
+    """
+    Retrieves a user, wrapping low-level DB errors in our custom exception.
+    """
+    try:
+        # Imagine this function can raise a cryptic `ConnectionFailure`
+        user = third_party_db_library.fetch_user(user_id)
+        return user
+    except third_party_db_library.ConnectionFailure as e:
+        # Bad 👎: The original error context is lost.
+        # raise DatabaseError("Failed to fetch user.")
+
+        # Good 👍: The original traceback is preserved.
+        raise DatabaseError(f"Failed to fetch user {user_id}") from e
+```
+This will result in a much more informative error message in the logs:
+```
+third_party_db_library.ConnectionFailure: Timed out while connecting to host
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  ...
+my_app.exceptions.DatabaseError: Failed to fetch user 123
+```
+
+---
+
+# Python: Security Best Practices
+
+Writing secure code is a fundamental responsibility. This document outlines the baseline security practices that **must** be followed in all Python projects.
+
+## 1. Secrets Management
+
+**Rule:** Never, under any circumstances, hardcode secrets in the source code. This includes API keys, database passwords, tokens, private certificates, or any other sensitive credentials.
+
+- **Use Environment Variables:** Secrets must be loaded from environment variables.
+- **Use `.env` files for Local Development:** For local development, store environment variables in a `.env` file.
+- **`.gitignore` is Mandatory:** The `.env` file **must** be listed in `.gitignore` to prevent it from ever being committed.
+- **Tooling:** Use a library like `python-dotenv` to load these variables automatically during development.
+
+**Example:**
+```python
+# In your code (e.g., settings.py)
+import os
+from dotenv import load_dotenv
+
+# Load variables from .env file
+load_dotenv()
+
+# Access the secret securely
+DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
+
+if not DATABASE_PASSWORD:
+    raise ValueError("DATABASE_PASSWORD environment variable not set.")
+
+```
+**In `.env` file (DO NOT COMMIT):**
+```
+DATABASE_PASSWORD="your-super-secret-password"
+```
+
+## 2. Input Validation
+
+**Rule:** Never trust data coming from external sources. Always validate and sanitize input from users, APIs, and other services.
+
+- **Use a Validation Library:** Employ a robust data validation library like `Pydantic` to define strict schemas for all incoming data. This protects against injection attacks, unexpected data types, and malformed payloads.
+
+**Example with `Pydantic`:**
+```python
+from pydantic import BaseModel, EmailStr, Field
+
+class UserRegistration(BaseModel):
+    email: EmailStr  # Pydantic automatically validates this is a valid email format.
+    password: str = Field(min_length=8)
+    age: int = Field(gt=0, le=120) # Must be a positive integer <= 120.
+
+def register_user(payload: dict):
+    try:
+        # Pydantic will raise a `ValidationError` if the payload is invalid.
+        user_data = UserRegistration(**payload)
+
+        # ... proceed with validated data ...
+        print(f"Registering user with email: {user_data.email}")
+
+    except ValidationError as e:
+        # Handle the invalid data error
+        logger.error(f"Invalid registration payload: {e}")
+```
+
+## 3. Dependency Security
+
+**Rule:** Keep dependencies up-to-date and scan them for known vulnerabilities.
+
+- **Regularly Check for Updates:** Use `poetry show --latest` to check for outdated packages. Plan regular updates.
+- **Automated Scanning:** Use automated tools to scan for vulnerabilities in your dependency tree.
+  - **GitHub:** Enable Dependabot or Snyk integration.
+  - **Local/CI:** Use tools like `safety` (`poetry run safety check`) to scan your installed packages against a vulnerability database.
+
+## 4. Static Application Security Testing (SAST)
+
+**Rule:** Integrate static analysis tools specifically designed to find common security issues in your code.
+
+- **Use `bandit`:** `bandit` is a tool that analyzes Python code to find common security vulnerabilities. It should be part of the development dependencies and run regularly in CI.
+
+**Installation:**
+```bash
+poetry add bandit --group dev
+```
+
+**Usage:**
+```bash
+poetry run bandit -r .
+```
+This command will scan your entire project for issues like hardcoded passwords, unsafe deserialization, and other common security risks.
